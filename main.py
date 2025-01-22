@@ -1,8 +1,9 @@
 from pathlib import Path
 import shutil 
-from ase.io import read
+from ase.io import read, write
 from tqdm import tqdm
 from multiprocessing import Pool
+from sklearn.model_selection import train_test_split
 
 TRANSITION_METALS = {'Co', 'Cr', 'Fe', 'Mn', 'Mo', 'Ni', 'V', 'W'}
 ANIONS = {'O', 'F'}
@@ -11,19 +12,53 @@ def contains_tm_and_anion(atoms):
     symbols = set(atoms.get_chemical_symbols())
     return bool(symbols & TRANSITION_METALS) and bool(symbols & ANIONS)
 
-mptrj_dir = Path('mptrj-gga-ggapu')
-mptrj_ggapu_dir = Path('mptrj-ggapu'); mptrj_ggapu_dir.mkdir(exist_ok=True)
-mptrj_gga_dir = Path('mptrj-gga'); mptrj_gga_dir.mkdir(exist_ok=True)
+def sort_file(f):
+    configs = read(f, ':')
+    return (configs, contains_tm_and_anion(configs[0]))
 
-
-def process_file(mp_entry):
-    atoms = read(mp_entry, '0')
-    if contains_tm_and_anion(atoms):
-        shutil.copy2(mp_entry, mptrj_ggapu_dir / mp_entry.name)
-    else:
-        shutil.copy2(mp_entry, mptrj_gga_dir / mp_entry.name)
+def write_configs(args):
+    configs, dir_path = args
+    print(f"Writing {len(configs)} configs to {dir_path}")
+    for c in tqdm(configs):
+        write(dir_path / f"{c.info['mp_id']}.extxyz", c, append=True)
 
 if __name__ == '__main__':
+
+    mptrj_dir = Path('mptrj-gga-ggapu')
+    mptrj_ggapu_dir = Path('mptrj-ggapu'); mptrj_ggapu_dir.mkdir(exist_ok=False)
+    mptrj_gga_dir = Path('mptrj-gga'); mptrj_gga_dir.mkdir(exist_ok=False)
     files = list(mptrj_dir.iterdir())
+    
+    # Sort files into GGA and GGA+U in parallel
     with Pool() as pool:
-        list(tqdm(pool.imap(process_file, files), total=len(files)))
+        results = list(tqdm(pool.imap(sort_file, files), total=len(files)))
+    
+    # Separate results into GGA and GGA+U lists
+    gga_configs_ = [configs for configs, is_ggapu in results if not is_ggapu]
+    gga_configs = []
+    for c in gga_configs_:
+        gga_configs.extend(c)
+    ggapu_config_ = [configs for configs, is_ggapu in results if is_ggapu]
+    ggapu_configs = []
+    for c in ggapu_config_:
+        ggapu_configs.extend(c)
+
+
+    
+    # Split each list into train/valid
+    number = 84128
+    gga_train, gga_valid = train_test_split(gga_configs, test_size=0.07, random_state=number)
+    ggapu_train, ggapu_valid = train_test_split(ggapu_configs, test_size=0.07, random_state=number+1)
+    
+    # Create subdirectories
+    (mptrj_gga_dir / 'train').mkdir(exist_ok=False)
+    (mptrj_gga_dir / 'valid').mkdir(exist_ok=False)
+    (mptrj_ggapu_dir / 'train').mkdir(exist_ok=False)
+    (mptrj_ggapu_dir / 'valid').mkdir(exist_ok=False)
+    
+    # Copy files to appropriate directories
+
+    write_configs((gga_train, mptrj_gga_dir / 'train'))
+    write_configs((gga_valid, mptrj_gga_dir / 'valid'))
+    write_configs((ggapu_train, mptrj_ggapu_dir / 'train'))
+    write_configs((ggapu_valid, mptrj_ggapu_dir / 'valid'))
