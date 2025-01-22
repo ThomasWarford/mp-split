@@ -24,7 +24,7 @@ def write_configs(args):
 
 if __name__ == '__main__':
 
-    mptrj_dir = Path('mptrj-gga-ggapu')
+    mptrj_dir = Path('mptrj-gga-ggapu') # Downloaded from https://github.com/ACEsuit/mace-mp/releases/download/mace_mp_0/training_data.zip
     mptrj_ggapu_dir = Path('mptrj-ggapu'); mptrj_ggapu_dir.mkdir(exist_ok=False)
     mptrj_gga_dir = Path('mptrj-gga'); mptrj_gga_dir.mkdir(exist_ok=False)
     files = list(mptrj_dir.iterdir())
