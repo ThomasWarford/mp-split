@@ -44,3 +44,6 @@ if __name__ == '__main__':
     # Write GGA and GGA+U configs to separate xyz files
     write('mptrj-gga.xyz', gga_configs)
     write('mptrj-ggapu.xyz', ggapu_configs)
+    e0s = read('isolated_atoms_VASP_PBE.extxyz', ':')
+    write('mptrj-gga.xyz', e0s, append=True)
+    write('mptrj-ggapu.xyz', e0s, append=True)
