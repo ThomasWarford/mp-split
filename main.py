@@ -25,8 +25,6 @@ def write_configs(args):
 if __name__ == '__main__':
 
     mptrj_dir = Path('mptrj-gga-ggapu') # Downloaded from https://github.com/ACEsuit/mace-mp/releases/download/mace_mp_0/training_data.zip
-    mptrj_ggapu_dir = Path('mptrj-ggapu'); mptrj_ggapu_dir.mkdir(exist_ok=False)
-    mptrj_gga_dir = Path('mptrj-gga'); mptrj_gga_dir.mkdir(exist_ok=False)
     files = list(mptrj_dir.iterdir())
     
     # Sort files into GGA and GGA+U in parallel
@@ -43,22 +41,6 @@ if __name__ == '__main__':
     for c in ggapu_config_:
         ggapu_configs.extend(c)
 
-
-    
-    # Split each list into train/valid
-    number = 84128
-    gga_train, gga_valid = train_test_split(gga_configs, test_size=0.07, random_state=number)
-    ggapu_train, ggapu_valid = train_test_split(ggapu_configs, test_size=0.07, random_state=number+1)
-    
-    # Create subdirectories
-    (mptrj_gga_dir / 'train').mkdir(exist_ok=False)
-    (mptrj_gga_dir / 'valid').mkdir(exist_ok=False)
-    (mptrj_ggapu_dir / 'train').mkdir(exist_ok=False)
-    (mptrj_ggapu_dir / 'valid').mkdir(exist_ok=False)
-    
-    # Copy files to appropriate directories
-
-    write_configs((gga_train, mptrj_gga_dir / 'train'))
-    write_configs((gga_valid, mptrj_gga_dir / 'valid'))
-    write_configs((ggapu_train, mptrj_ggapu_dir / 'train'))
-    write_configs((ggapu_valid, mptrj_ggapu_dir / 'valid'))
+    # Write GGA and GGA+U configs to separate xyz files
+    write('mptrj-gga.xyz', gga_configs)
+    write('mptrj-ggapu.xyz', ggapu_configs)
