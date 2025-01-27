@@ -35,10 +35,18 @@ if __name__ == '__main__':
     gga_configs_ = [configs for configs, is_ggapu in results if not is_ggapu]
     gga_configs = []
     for c in gga_configs_:
+        for atoms in c:
+            atoms.info['REF_energy'] = atoms.get_total_energy()
+            atoms.arrays['REF_forces'] = atoms.get_forces()
+            atoms.info['REF_stress'] = atoms.get_stress()
         gga_configs.extend(c)
     ggapu_config_ = [configs for configs, is_ggapu in results if is_ggapu]
     ggapu_configs = []
     for c in ggapu_config_:
+        for atoms in c:
+            atoms.info['REF_energy'] = atoms.get_total_energy()
+            atoms.arrays['REF_forces'] = atoms.get_forces()
+            atoms.info['REF_stress'] = atoms.get_stress()
         ggapu_configs.extend(c)
 
     # Write GGA and GGA+U configs to separate xyz files
