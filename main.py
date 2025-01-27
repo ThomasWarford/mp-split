@@ -22,6 +22,13 @@ def write_configs(args):
     for c in tqdm(configs):
         write(dir_path / f"{c.info['mp_id']}.extxyz", c, append=True)
 
+def count_get_all_elements(configs):
+    elements = set()
+    for config in configs:
+        for element in config.get_chemical_symbols():
+            elements.add(element)
+    return elements
+
 if __name__ == '__main__':
 
     mptrj_dir = Path('mptrj-gga-ggapu') # Downloaded from https://github.com/ACEsuit/mace-mp/releases/download/mace_mp_0/training_data.zip
@@ -52,6 +59,11 @@ if __name__ == '__main__':
     # Write GGA and GGA+U configs to separate xyz files
     write('mptrj-gga.xyz', gga_configs)
     write('mptrj-ggapu.xyz', ggapu_configs)
+
+    # add IsolatedAtoms
     e0s = read('isolated_atoms_VASP_PBE.extxyz', ':')
-    write('mptrj-gga.xyz', e0s, append=True)
-    write('mptrj-ggapu.xyz', e0s, append=True)
+    gga_elements = count_get_all_elements(gga_configs)
+    ggapu_elements = count_get_all_elements(ggapu_configs)
+
+    write('mptrj-gga.xyz', [config for config in e0s if config[0].symbol in gga_elements], append=True)
+    write('mptrj-ggapu.xyz', [config for config in e0s if config[0].symbol in ggapu_elements], append=True)
