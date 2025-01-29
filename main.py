@@ -45,7 +45,7 @@ if __name__ == '__main__':
         for atoms in c:
             atoms.info['REF_energy'] = atoms.get_total_energy()
             atoms.arrays['REF_forces'] = atoms.get_forces()
-            atoms.info['REF_stress'] = atoms.get_stress(voigt=False)
+            atoms.info['REF_stress'] = atoms.get_stress(voigt=False).flatten()
         gga_configs.extend(c)
     write('mptrj-gga.xyz', gga_configs)
     gga_elements = count_get_all_elements(gga_configs)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         for atoms in c:
             atoms.info['REF_energy'] = atoms.get_total_energy()
             atoms.arrays['REF_forces'] = atoms.get_forces()
-            atoms.info['REF_stress'] = atoms.get_stress(voigt=False)
+            atoms.info['REF_stress'] = atoms.get_stress(voigt=False).flatten()
         ggapu_configs.extend(c)
     write('mptrj-ggapu.xyz', ggapu_configs)
     ggapu_elements = count_get_all_elements(ggapu_configs)
